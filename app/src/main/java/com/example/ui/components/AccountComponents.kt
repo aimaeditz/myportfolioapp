@@ -1,8 +1,15 @@
 package com.example.ui.components
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,6 +23,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AlternateEmail
+import androidx.compose.material.icons.filled.Article
 import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Code
@@ -34,11 +42,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -141,6 +152,14 @@ fun getPlatformBadgeStyle(platformType: PlatformType): PlatformBadgeStyle {
             darkContainerColor = Color(0xFF451A03),
             darkContentColor = Color(0xFFFBBF24)
         )
+        PlatformType.BLOGGER -> PlatformBadgeStyle(
+            tag = "BL",
+            platformName = "Blogger",
+            containerColor = Color(0xFFFFF7ED), // orange-50
+            contentColor = Color(0xFFEA580C),   // orange-600
+            darkContainerColor = Color(0xFF431407),
+            darkContentColor = Color(0xFFFB923C)
+        )
         PlatformType.LINK_HUB -> PlatformBadgeStyle(
             tag = "LK",
             platformName = "LinkHub",
@@ -180,6 +199,7 @@ fun getPlatformIcon(platformType: PlatformType): ImageVector {
         PlatformType.GITHUB -> Icons.Filled.Code
         PlatformType.FIVERR -> Icons.Filled.Work
         PlatformType.SUPERPROFILE -> Icons.Filled.Badge
+        PlatformType.BLOGGER -> Icons.Filled.Article
         PlatformType.LINK_HUB -> Icons.Filled.Link
         PlatformType.WEBSITE -> Icons.Filled.Language
         PlatformType.OTHER -> Icons.Filled.OpenInNew
@@ -194,35 +214,66 @@ fun SleekAccountGridCard(
 ) {
     val isDark = MaterialTheme.colorScheme.background.red < 0.2f
     val badgeStyle = getPlatformBadgeStyle(account.platformType)
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.97f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "cardPressScale"
+    )
+
+    val cardBg by animateColorAsState(
+        targetValue = if (isDark) Color(0xFF18181B) else Color.White,
+        animationSpec = tween(200),
+        label = "cardBg"
+    )
+
+    val borderColor by animateColorAsState(
+        targetValue = if (isDark) SleekBorderDark else SleekBorderLight,
+        animationSpec = tween(200),
+        label = "cardBorder"
+    )
 
     Box(
         modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
             .shadow(
                 elevation = if (isDark) 0.dp else 1.dp,
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(12.dp),
                 spotColor = Color(0xFFE4E4E7).copy(alpha = 0.6f)
             )
-            .clip(RoundedCornerShape(16.dp))
-            .background(if (isDark) Color(0xFF18181B) else Color.White)
+            .clip(RoundedCornerShape(12.dp))
+            .background(cardBg)
             .border(
                 width = 1.dp,
-                color = if (isDark) SleekBorderDark else SleekBorderLight,
-                shape = RoundedCornerShape(16.dp)
+                color = borderColor,
+                shape = RoundedCornerShape(12.dp)
             )
-            .clickable(onClick = onClick)
-            .padding(12.dp)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
+            .padding(horizontal = 10.dp, vertical = 9.dp)
             .testTag("account_item_${account.id}")
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp)
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Platform 2-Letter Badge
+            // Platform 2-Letter Badge (compact 30dp)
             Box(
                 modifier = Modifier
-                    .size(34.dp)
-                    .clip(RoundedCornerShape(8.dp))
+                    .size(30.dp)
+                    .clip(RoundedCornerShape(7.dp))
                     .background(if (isDark) badgeStyle.darkContainerColor else badgeStyle.containerColor),
                 contentAlignment = Alignment.Center
             ) {
@@ -230,7 +281,7 @@ fun SleekAccountGridCard(
                     text = badgeStyle.tag,
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp
+                        fontSize = 11.sp
                     ),
                     color = if (isDark) badgeStyle.darkContentColor else badgeStyle.contentColor
                 )
@@ -244,8 +295,8 @@ fun SleekAccountGridCard(
                 Text(
                     text = if (account.handle.isNotBlank() && account.handle != account.title) account.handle else account.title,
                     style = MaterialTheme.typography.bodySmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 11.5.sp,
                         letterSpacing = (-0.2).sp
                     ),
                     color = if (isDark) Color(0xFFFAFAFA) else Color(0xFF18181B),
@@ -257,12 +308,114 @@ fun SleekAccountGridCard(
                     text = badgeStyle.platformName,
                     style = MaterialTheme.typography.labelSmall.copy(
                         fontWeight = FontWeight.Normal,
-                        fontSize = 10.sp
+                        fontSize = 9.5.sp
                     ),
                     color = Color(0xFFA1A1AA),
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun CategoryTabButton(
+    categoryName: String,
+    isSelected: Boolean,
+    count: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val isDark = MaterialTheme.colorScheme.background.red < 0.2f
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.95f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "tabPressScale"
+    )
+
+    val targetBgColor = if (isSelected) {
+        if (isDark) Color(0xFFFAFAFA) else Color(0xFF18181B)
+    } else {
+        if (isDark) Color(0xFF27272A).copy(alpha = 0.6f) else Color(0xFFF4F4F5)
+    }
+
+    val targetContentColor = if (isSelected) {
+        if (isDark) Color(0xFF18181B) else Color.White
+    } else {
+        if (isDark) Color(0xFFA1A1AA) else Color(0xFF71717A)
+    }
+
+    val targetBorderColor = if (isSelected) {
+        Color.Transparent
+    } else {
+        if (isDark) SleekBorderDark else SleekBorderLight
+    }
+
+    val animatedBgColor by animateColorAsState(targetBgColor, animationSpec = tween(180), label = "tabBg")
+    val animatedContentColor by animateColorAsState(targetContentColor, animationSpec = tween(180), label = "tabContent")
+    val animatedBorderColor by animateColorAsState(targetBorderColor, animationSpec = tween(180), label = "tabBorder")
+
+    Box(
+        modifier = modifier
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            }
+            .clip(RoundedCornerShape(20.dp))
+            .background(animatedBgColor)
+            .border(width = 0.5.dp, color = animatedBorderColor, shape = RoundedCornerShape(20.dp))
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .testTag("category_tab_$categoryName"),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(5.dp)
+        ) {
+            Text(
+                text = categoryName,
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                    fontSize = 11.sp,
+                    letterSpacing = 0.2.sp
+                ),
+                color = animatedContentColor
+            )
+            if (count > 0) {
+                val badgeBg = if (isSelected) {
+                    if (isDark) Color(0xFF18181B).copy(alpha = 0.15f) else Color.White.copy(alpha = 0.25f)
+                } else {
+                    if (isDark) Color(0xFF3F3F46) else Color(0xFFE4E4E7)
+                }
+                val animatedBadgeBg by animateColorAsState(badgeBg, animationSpec = tween(180), label = "badgeBg")
+
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(animatedBadgeBg)
+                        .padding(horizontal = 5.dp, vertical = 1.dp)
+                ) {
+                    Text(
+                        text = "$count",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = animatedContentColor
+                    )
+                }
             }
         }
     }

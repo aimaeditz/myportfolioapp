@@ -6,8 +6,12 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -79,58 +83,35 @@ class MainActivity : ComponentActivity() {
                 themeMode = config.themeMode,
                 accentHex = config.accentHex
             ) {
-                if (config.splashEnabled && isSplashShowing) {
-                    SplashScreen(
-                        appName = config.appName,
-                        creatorName = config.creatorName,
-                        brandName = config.brandName,
-                        customAvatarUri = config.customAvatarUri,
-                        onFinish = { viewModel.dismissSplash() }
-                    )
-                } else {
-                    Scaffold(
-                        modifier = Modifier.fillMaxSize(),
-                        topBar = {
-                            if (!isInAdminScreen) {
-                                TopHeaderBar(
-                                    appName = config.appName,
-                                    customAvatarUri = config.customAvatarUri,
-                                    isAdminLoggedIn = isAdminLoggedIn,
-                                    currentThemeMode = config.themeMode,
-                                    onThemeSelect = { mode -> viewModel.updateThemeMode(mode) },
-                                    onAvatarClick = {},
-                                    onAdminClick = {
-                                        if (isAdminLoggedIn) {
-                                            isInAdminScreen = true
-                                        } else {
-                                            viewModel.openAdmin()
-                                        }
-                                    }
-                                )
-                            }
-                        },
-                        snackbarHost = { SnackbarHost(snackbarHostState) }
-                    ) { innerPadding ->
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(innerPadding)
-                        ) {
-                            AnimatedContent(
-                                targetState = isInAdminScreen && isAdminLoggedIn,
-                                transitionSpec = { fadeIn() togetherWith fadeOut() },
-                                label = "ScreenTransition"
-                            ) { inAdmin ->
-                                if (inAdmin) {
-                                    AdminAuthorityScreen(
-                                        viewModel = viewModel,
-                                        onBackToHome = { isInAdminScreen = false }
-                                    )
-                                } else {
-                                    HomeScreen(
-                                        config = config,
-                                        visibleAccounts = visibleAccounts,
-                                        onOpenAdmin = {
+                AnimatedContent(
+                    targetState = config.splashEnabled && isSplashShowing,
+                    transitionSpec = {
+                        fadeIn(animationSpec = tween(220, easing = FastOutSlowInEasing)) togetherWith
+                                fadeOut(animationSpec = tween(220, easing = FastOutSlowInEasing))
+                    },
+                    label = "SplashAppTransition"
+                ) { showingSplash ->
+                    if (showingSplash) {
+                        SplashScreen(
+                            appName = config.appName,
+                            creatorName = config.creatorName,
+                            brandName = config.brandName,
+                            customAvatarUri = config.customAvatarUri,
+                            onFinish = { viewModel.dismissSplash() }
+                        )
+                    } else {
+                        Scaffold(
+                            modifier = Modifier.fillMaxSize(),
+                            topBar = {
+                                if (!isInAdminScreen) {
+                                    TopHeaderBar(
+                                        appName = config.appName,
+                                        customAvatarUri = config.customAvatarUri,
+                                        isAdminLoggedIn = isAdminLoggedIn,
+                                        currentThemeMode = config.themeMode,
+                                        onThemeSelect = { mode -> viewModel.updateThemeMode(mode) },
+                                        onAvatarClick = {},
+                                        onAdminClick = {
                                             if (isAdminLoggedIn) {
                                                 isInAdminScreen = true
                                             } else {
@@ -139,36 +120,75 @@ class MainActivity : ComponentActivity() {
                                         }
                                     )
                                 }
-                            }
-                        }
-
-                        // Admin Login Dialog
-                        if (showAdminLoginDialog) {
-                            AdminLoginDialog(
-                                onDismiss = { viewModel.closeAdminLoginDialog() },
-                                onLogin = { pass ->
-                                    val success = viewModel.tryAdminLogin(pass)
-                                    if (success) {
-                                        isInAdminScreen = true
+                            },
+                            snackbarHost = { SnackbarHost(snackbarHostState) }
+                        ) { innerPadding ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(innerPadding)
+                            ) {
+                                AnimatedContent(
+                                    targetState = isInAdminScreen && isAdminLoggedIn,
+                                    transitionSpec = {
+                                        (fadeIn(animationSpec = tween(200, easing = FastOutSlowInEasing)) +
+                                                scaleIn(initialScale = 0.98f, animationSpec = tween(200, easing = FastOutSlowInEasing)))
+                                            .togetherWith(
+                                                fadeOut(animationSpec = tween(160, easing = FastOutSlowInEasing)) +
+                                                        scaleOut(targetScale = 0.98f, animationSpec = tween(160, easing = FastOutSlowInEasing))
+                                            )
+                                    },
+                                    label = "ScreenTransition"
+                                ) { inAdmin ->
+                                    if (inAdmin) {
+                                        AdminAuthorityScreen(
+                                            viewModel = viewModel,
+                                            onBackToHome = { isInAdminScreen = false }
+                                        )
+                                    } else {
+                                        HomeScreen(
+                                            config = config,
+                                            visibleAccounts = visibleAccounts,
+                                            onOpenAdmin = {
+                                                if (isAdminLoggedIn) {
+                                                    isInAdminScreen = true
+                                                } else {
+                                                    viewModel.openAdmin()
+                                                }
+                                            }
+                                        )
                                     }
-                                    success
                                 }
-                            )
-                        }
+                            }
 
-                        // Account Add/Edit Dialog
-                        if (showAccountEditDialog) {
-                            AccountEditDialog(
-                                account = editingAccount,
-                                onDismiss = { viewModel.dismissAccountEditDialog() },
-                                onSave = { accountToSave ->
-                                    viewModel.saveAccount(accountToSave)
-                                },
-                                onDelete = { accountToDelete ->
-                                    viewModel.deleteAccount(accountToDelete)
-                                    viewModel.dismissAccountEditDialog()
-                                }
-                            )
+                            // Admin Login Dialog
+                            if (showAdminLoginDialog) {
+                                AdminLoginDialog(
+                                    onDismiss = { viewModel.closeAdminLoginDialog() },
+                                    onLogin = { pass ->
+                                        val success = viewModel.tryAdminLogin(pass)
+                                        if (success) {
+                                            isInAdminScreen = true
+                                        }
+                                        success
+                                    }
+                                )
+                            }
+
+                            // Account Add/Edit Dialog
+                            if (showAccountEditDialog) {
+                                AccountEditDialog(
+                                    account = editingAccount,
+                                    onDismiss = { viewModel.dismissAccountEditDialog() },
+                                    onSave = { accountToSave ->
+                                        viewModel.saveAccount(accountToSave)
+                                    },
+                                    onDelete = { accountToDelete ->
+                                        viewModel.deleteAccount(accountToDelete)
+                                        viewModel.dismissAccountEditDialog()
+                                    }
+                                )
+                            }
                         }
                     }
                 }

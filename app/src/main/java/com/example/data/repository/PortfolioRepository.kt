@@ -33,6 +33,22 @@ class PortfolioRepository(
         val count = accountDao.getCount()
         if (count == 0) {
             accountDao.insertAccounts(DefaultData.getDefaultAccounts())
+        } else {
+            // Normalize categories if any existing accounts have legacy category names
+            val currentAccounts = accountDao.getAllAccountsList()
+            var hasUpdates = false
+            val updatedList = currentAccounts.map { acc ->
+                val norm = com.example.data.model.AccountCategory.normalize(acc.category, acc.platformType)
+                if (acc.category != norm) {
+                    hasUpdates = true
+                    acc.copy(category = norm)
+                } else {
+                    acc
+                }
+            }
+            if (hasUpdates) {
+                accountDao.insertAccounts(updatedList)
+            }
         }
     }
 
@@ -201,7 +217,7 @@ class PortfolioRepository(
                             url = accObj.optString("url", ""),
                             orderIndex = accObj.optInt("orderIndex", i),
                             isVisible = accObj.optBoolean("isVisible", true),
-                            category = accObj.optString("category", platform.category)
+                            category = com.example.data.model.AccountCategory.normalize(accObj.optString("category", ""), platform)
                         )
                     )
                 }

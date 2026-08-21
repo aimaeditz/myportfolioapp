@@ -6,6 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -25,16 +26,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
@@ -46,16 +43,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.data.model.AccountCategory
 import com.example.data.model.AccountEntity
 import com.example.data.model.PlatformType
 import com.example.ui.components.getPlatformIcon
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AccountEditDialog(
     account: AccountEntity?,
@@ -65,11 +65,16 @@ fun AccountEditDialog(
 ) {
     val isNew = account == null
     var selectedPlatform by remember { mutableStateOf(account?.platformType ?: PlatformType.OTHER) }
+    var selectedCategory by remember {
+        mutableStateOf(
+            if (account != null) AccountCategory.normalize(account.category, account.platformType)
+            else selectedPlatform.defaultCategory
+        )
+    }
     var title by remember { mutableStateOf(account?.title ?: "") }
     var handle by remember { mutableStateOf(account?.handle ?: "") }
     var url by remember { mutableStateOf(account?.url ?: "") }
     var isVisible by remember { mutableStateOf(account?.isVisible ?: true) }
-    var expandedDropdown by remember { mutableStateOf(false) }
 
     Dialog(
         onDismissRequest = onDismiss,
@@ -146,6 +151,9 @@ fun AccountEditDialog(
                                     )
                                     .clickable {
                                         selectedPlatform = platform
+                                        if (isNew) {
+                                            selectedCategory = platform.defaultCategory
+                                        }
                                         if (title.isBlank() || PlatformType.values().any { it.displayName == title }) {
                                             title = platform.displayName
                                         }
@@ -167,6 +175,50 @@ fun AccountEditDialog(
                                     ),
                                     color = if (isSelected) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.onSurface
                                 )
+                            }
+                        }
+                    }
+
+                    // Category Selection Chips
+                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(
+                            text = "Category",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            AccountCategory.ALL.forEach { cat ->
+                                val isCatSelected = cat == selectedCategory
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(
+                                            if (isCatSelected) MaterialTheme.colorScheme.primary
+                                            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                        )
+                                        .border(
+                                            width = 1.dp,
+                                            color = if (isCatSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f),
+                                            shape = RoundedCornerShape(8.dp)
+                                        )
+                                        .clickable { selectedCategory = cat }
+                                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                                        .testTag("dialog_category_$cat")
+                                ) {
+                                    Text(
+                                        text = cat,
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontWeight = if (isCatSelected) FontWeight.Bold else FontWeight.Medium,
+                                            fontSize = 12.sp
+                                        ),
+                                        color = if (isCatSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
                             }
                         }
                     }
@@ -261,14 +313,14 @@ fun AccountEditDialog(
                                     title = title.ifBlank { selectedPlatform.displayName },
                                     handle = handle,
                                     url = url,
-                                    category = selectedPlatform.category
+                                    category = selectedCategory
                                 )).copy(
                                     platformType = selectedPlatform,
                                     title = title.ifBlank { selectedPlatform.displayName },
                                     handle = handle,
                                     url = url,
                                     isVisible = isVisible,
-                                    category = selectedPlatform.category
+                                    category = selectedCategory
                                 )
                                 onSave(savedAccount)
                             },

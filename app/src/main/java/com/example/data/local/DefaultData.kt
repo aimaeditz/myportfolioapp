@@ -67,7 +67,7 @@ object DefaultData {
                 category = "YouTube"
             ),
 
-            // Instagram
+            // Social Media - Instagram
             AccountEntity(
                 id = 4,
                 platformType = PlatformType.INSTAGRAM,
@@ -76,10 +76,10 @@ object DefaultData {
                 url = "https://www.instagram.com/its_abid29/",
                 orderIndex = order++,
                 isVisible = true,
-                category = "Instagram"
+                category = "Social Media"
             ),
 
-            // TikTok
+            // Social Media - TikTok
             AccountEntity(
                 id = 5,
                 platformType = PlatformType.TIKTOK,
@@ -88,7 +88,7 @@ object DefaultData {
                 url = "https://www.tiktok.com/@mabideditz",
                 orderIndex = order++,
                 isVisible = true,
-                category = "TikTok"
+                category = "Social Media"
             ),
             AccountEntity(
                 id = 6,
@@ -98,7 +98,7 @@ object DefaultData {
                 url = "https://www.tiktok.com/@its_abid29",
                 orderIndex = order++,
                 isVisible = true,
-                category = "TikTok"
+                category = "Social Media"
             ),
             AccountEntity(
                 id = 7,
@@ -108,10 +108,10 @@ object DefaultData {
                 url = "https://www.tiktok.com/@motivifyx_?lang=en",
                 orderIndex = order++,
                 isVisible = true,
-                category = "TikTok"
+                category = "Social Media"
             ),
 
-            // Facebook
+            // Social Media - Facebook
             AccountEntity(
                 id = 8,
                 platformType = PlatformType.FACEBOOK,
@@ -120,7 +120,7 @@ object DefaultData {
                 url = "https://www.facebook.com/fb.mabid/",
                 orderIndex = order++,
                 isVisible = true,
-                category = "Facebook"
+                category = "Social Media"
             ),
             AccountEntity(
                 id = 9,
@@ -130,10 +130,10 @@ object DefaultData {
                 url = "https://www.facebook.com/aimaeditz",
                 orderIndex = order++,
                 isVisible = true,
-                category = "Facebook"
+                category = "Social Media"
             ),
 
-            // WhatsApp Channels
+            // Social Media - WhatsApp Channels
             AccountEntity(
                 id = 10,
                 platformType = PlatformType.WHATSAPP,
@@ -142,7 +142,7 @@ object DefaultData {
                 url = "https://www.whatsapp.com/channel/0029Vb669jh11ulG8ttZ3K3s",
                 orderIndex = order++,
                 isVisible = true,
-                category = "WhatsApp"
+                category = "Social Media"
             ),
             AccountEntity(
                 id = 11,
@@ -152,10 +152,10 @@ object DefaultData {
                 url = "https://whatsapp.com/channel/0029Vb6p9rh0VycFC0DPn10f",
                 orderIndex = order++,
                 isVisible = true,
-                category = "WhatsApp"
+                category = "Social Media"
             ),
 
-            // Threads
+            // Social Media - Threads
             AccountEntity(
                 id = 12,
                 platformType = PlatformType.THREADS,
@@ -164,10 +164,10 @@ object DefaultData {
                 url = "https://www.threads.com/@its_abid29",
                 orderIndex = order++,
                 isVisible = true,
-                category = "Threads"
+                category = "Social Media"
             ),
 
-            // Pinterest
+            // Social Media - Pinterest
             AccountEntity(
                 id = 13,
                 platformType = PlatformType.PINTEREST,
@@ -176,10 +176,10 @@ object DefaultData {
                 url = "https://www.pinterest.com/mabidrizvi/",
                 orderIndex = order++,
                 isVisible = true,
-                category = "Pinterest"
+                category = "Social Media"
             ),
 
-            // GitHub
+            // Professional - GitHub
             AccountEntity(
                 id = 14,
                 platformType = PlatformType.GITHUB,
@@ -188,10 +188,10 @@ object DefaultData {
                 url = "https://github.com/aimaeditz",
                 orderIndex = order++,
                 isVisible = true,
-                category = "GitHub"
+                category = "Professional"
             ),
 
-            // Fiverr
+            // Professional - Fiverr
             AccountEntity(
                 id = 15,
                 platformType = PlatformType.FIVERR,
@@ -200,10 +200,10 @@ object DefaultData {
                 url = "https://www.fiverr.com/its_abid29",
                 orderIndex = order++,
                 isVisible = true,
-                category = "Fiverr"
+                category = "Professional"
             ),
 
-            // SuperProfile
+            // Professional - SuperProfile
             AccountEntity(
                 id = 16,
                 platformType = PlatformType.SUPERPROFILE,
@@ -212,10 +212,10 @@ object DefaultData {
                 url = "https://superprofile.bio/aimaeditz",
                 orderIndex = order++,
                 isVisible = true,
-                category = "SuperProfile"
+                category = "Professional"
             ),
 
-            // Link Hub
+            // Websites - Link Hub
             AccountEntity(
                 id = 17,
                 platformType = PlatformType.LINK_HUB,
@@ -224,29 +224,29 @@ object DefaultData {
                 url = "https://link.me/maeditz",
                 orderIndex = order++,
                 isVisible = true,
-                category = "Link Hub"
+                category = "Websites"
             ),
 
-            // Websites & Blogs
+            // Blogger - Websites & Blogs
             AccountEntity(
                 id = 18,
-                platformType = PlatformType.WEBSITE,
+                platformType = PlatformType.BLOGGER,
                 title = "AI Prompt Xpert",
                 handle = "aipromptxpert.blogspot.com",
                 url = "https://aipromptxpert.blogspot.com/",
                 orderIndex = order++,
                 isVisible = true,
-                category = "Websites"
+                category = "Blogger"
             ),
             AccountEntity(
                 id = 19,
-                platformType = PlatformType.WEBSITE,
+                platformType = PlatformType.BLOGGER,
                 title = "AiMAEditz Blog",
                 handle = "aimaeditz.blogspot.com",
                 url = "https://aimaeditz.blogspot.com/",
                 orderIndex = order++,
                 isVisible = true,
-                category = "Websites"
+                category = "Blogger"
             )
         )
     }

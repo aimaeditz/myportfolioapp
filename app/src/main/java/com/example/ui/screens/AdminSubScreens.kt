@@ -11,6 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -275,6 +277,15 @@ fun AdminAccountsScreen(
     viewModel: PortfolioViewModel,
     onBack: () -> Unit
 ) {
+    var selectedCategoryFilter by remember { mutableStateOf("All") }
+    val categoriesWithAll = listOf("All") + com.example.data.model.AccountCategory.ALL
+
+    val filteredAccounts = if (selectedCategoryFilter == "All") {
+        accounts
+    } else {
+        accounts.filter { com.example.data.model.AccountCategory.normalize(it.category, it.platformType) == selectedCategoryFilter }
+    }
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -295,6 +306,43 @@ fun AdminAccountsScreen(
             Icon(imageVector = Icons.Default.Add, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
             Text("Add New Account", fontWeight = FontWeight.Bold)
+        }
+
+        // Category Filter Chips
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            items(categoriesWithAll) { cat ->
+                val isSelected = cat == selectedCategoryFilter
+                val count = if (cat == "All") accounts.size
+                else accounts.count { com.example.data.model.AccountCategory.normalize(it.category, it.platformType) == cat }
+
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(
+                            if (isSelected) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        .clickable { selectedCategoryFilter = cat }
+                        .padding(horizontal = 10.dp, vertical = 5.dp)
+                ) {
+                    Text(
+                        text = if (cat == "All") "All ($count)" else "$cat ($count)",
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            fontSize = 11.sp
+                        ),
+                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
         }
 
         // Sorting Buttons (A–Z and Z–A)
@@ -337,7 +385,9 @@ fun AdminAccountsScreen(
                 .fillMaxWidth()
                 .weight(1f)
         ) {
-            items(accounts, key = { it.id }) { account ->
+            items(filteredAccounts, key = { it.id }) { account ->
+                val normalizedCategory = com.example.data.model.AccountCategory.normalize(account.category, account.platformType)
+
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -359,7 +409,7 @@ fun AdminAccountsScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        // Left: Icon + Title
+                        // Left: Icon + Title + Category tag
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -371,14 +421,34 @@ fun AdminAccountsScreen(
                                 tint = if (account.isVisible) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.outline,
                                 modifier = Modifier.size(22.dp)
                             )
-                            Column {
+                            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    Text(
+                                        text = account.title,
+                                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                                        color = if (account.isVisible) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f))
+                                            .padding(horizontal = 5.dp, vertical = 1.dp)
+                                    ) {
+                                        Text(
+                                            text = normalizedCategory,
+                                            style = MaterialTheme.typography.labelSmall.copy(
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold
+                                            ),
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
                                 Text(
-                                    text = account.title,
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
-                                    color = if (account.isVisible) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    text = account.handle,
+                                    text = if (account.handle.isNotBlank()) account.handle else account.url,
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )

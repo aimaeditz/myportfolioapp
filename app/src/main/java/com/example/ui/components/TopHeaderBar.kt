@@ -1,13 +1,19 @@
 package com.example.ui.components
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -45,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -67,6 +74,22 @@ fun TopHeaderBar(
     val isDark = MaterialTheme.colorScheme.background.red < 0.2f
     var showThemeMenu by remember { mutableStateOf(false) }
 
+    val barBg by animateColorAsState(
+        targetValue = MaterialTheme.colorScheme.background,
+        animationSpec = tween(200),
+        label = "barBg"
+    )
+    val buttonBg by animateColorAsState(
+        targetValue = if (isDark) Color(0xFF18181B) else Color.White,
+        animationSpec = tween(200),
+        label = "buttonBg"
+    )
+    val buttonBorder by animateColorAsState(
+        targetValue = if (isDark) SleekBorderDark else SleekBorderLight,
+        animationSpec = tween(200),
+        label = "buttonBorder"
+    )
+
     // Pulse animation for online indicator
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val pulseAlpha by infiniteTransition.animateFloat(
@@ -82,7 +105,7 @@ fun TopHeaderBar(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.background)
+            .background(barBg)
             .statusBarsPadding()
             .padding(horizontal = 24.dp, vertical = 12.dp)
     ) {
@@ -122,6 +145,17 @@ fun TopHeaderBar(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+                val themeInteraction = remember { MutableInteractionSource() }
+                val isThemePressed by themeInteraction.collectIsPressedAsState()
+                val themeScale by animateFloatAsState(
+                    targetValue = if (isThemePressed) 0.92f else 1f,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMedium
+                    ),
+                    label = "themeScale"
+                )
+
                 // Theme Toggle Icon & Compact Dropdown
                 Box {
                     val themeIcon = when (currentThemeMode.uppercase()) {
@@ -133,19 +167,27 @@ fun TopHeaderBar(
                     Box(
                         modifier = Modifier
                             .size(40.dp)
+                            .graphicsLayer {
+                                scaleX = themeScale
+                                scaleY = themeScale
+                            }
                             .shadow(
                                 elevation = if (isDark) 0.dp else 2.dp,
                                 shape = CircleShape,
                                 spotColor = Color(0xFFE4E4E7).copy(alpha = 0.7f)
                             )
                             .clip(CircleShape)
-                            .background(if (isDark) Color(0xFF18181B) else Color.White)
+                            .background(buttonBg)
                             .border(
                                 width = 1.dp,
-                                color = if (isDark) SleekBorderDark else SleekBorderLight,
+                                color = buttonBorder,
                                 shape = CircleShape
                             )
-                            .clickable { showThemeMenu = true }
+                            .clickable(
+                                interactionSource = themeInteraction,
+                                indication = null,
+                                onClick = { showThemeMenu = true }
+                            )
                             .testTag("theme_switcher_button"),
                         contentAlignment = Alignment.Center
                     ) {
@@ -161,10 +203,10 @@ fun TopHeaderBar(
                         expanded = showThemeMenu,
                         onDismissRequest = { showThemeMenu = false },
                         modifier = Modifier
-                            .background(if (isDark) Color(0xFF18181B) else Color.White)
+                            .background(buttonBg)
                             .border(
                                 width = 1.dp,
-                                color = if (isDark) SleekBorderDark else SleekBorderLight,
+                                color = buttonBorder,
                                 shape = RoundedCornerShape(12.dp)
                             )
                     ) {
@@ -284,23 +326,42 @@ fun TopHeaderBar(
                     }
                 }
 
+                val adminInteraction = remember { MutableInteractionSource() }
+                val isAdminPressed by adminInteraction.collectIsPressedAsState()
+                val adminScale by animateFloatAsState(
+                    targetValue = if (isAdminPressed) 0.92f else 1f,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMedium
+                    ),
+                    label = "adminScale"
+                )
+
                 // Settings / Admin Button
                 Box(
                     modifier = Modifier
                         .size(40.dp)
+                        .graphicsLayer {
+                            scaleX = adminScale
+                            scaleY = adminScale
+                        }
                         .shadow(
                             elevation = if (isDark) 0.dp else 2.dp,
                             shape = CircleShape,
                             spotColor = Color(0xFFE4E4E7).copy(alpha = 0.7f)
                         )
                         .clip(CircleShape)
-                        .background(if (isDark) Color(0xFF18181B) else Color.White)
+                        .background(buttonBg)
                         .border(
                             width = 1.dp,
-                            color = if (isDark) SleekBorderDark else SleekBorderLight,
+                            color = buttonBorder,
                             shape = CircleShape
                         )
-                        .clickable(onClick = onAdminClick)
+                        .clickable(
+                            interactionSource = adminInteraction,
+                            indication = null,
+                            onClick = onAdminClick
+                        )
                         .testTag("admin_settings_button"),
                     contentAlignment = Alignment.Center
                 ) {
