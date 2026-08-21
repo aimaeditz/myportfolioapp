@@ -1,0 +1,7 @@
+{
+  "name": "My Portfolio",
+  "description": "Personal portfolio and digital accounts hub for M Abid (AiMAEditz) with customizable Admin Authority.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
